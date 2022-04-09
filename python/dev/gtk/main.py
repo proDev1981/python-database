@@ -1,10 +1,10 @@
+from ast import Lambda
 import gi
 gi.require_version("Gtk","3.0")
 from gi.repository import Gtk , Gdk
 
 id = "id"
 value = "value"
-onClick = "onClick"
 title = "title"
 className = "className"
 width = "width"
@@ -23,12 +23,25 @@ position = "position"
 # window
 decorated = "decorated"
 transparent = "transparent"
+placeholder = "placeholder"
+# eventos
+onClick = "onClick"
+onChange = "onChange"
+onSubmit = "onSubmit"
 
 def btn_on(e):
     print("press")
 
 def move(e):
-    print(e.get_parent().get_parent().get_parent().set_decorated(True))
+    win = e.get_parent()
+    while win.get_name() != "GtkWindow":
+        win = win.get_parent()
+        print(win.get_name())
+    win.set_decorated(not win.get_decorated())
+
+def prueba(e):
+    print(e.get_text())
+    Gtk.main_quit()
 
 def win(props,body):
 
@@ -99,7 +112,7 @@ def button(props):
         btn.connect("clicked",props[onClick])
     return btn
 
-def text(props,text):
+def label(props):
     label=Gtk.Label()
     if xalign in props:
         label.set_xalign(props[xalign])
@@ -109,9 +122,8 @@ def text(props,text):
         label.set_opacity(props[opacity])
     if visible in props:         
         label.set_visible(props[visible])
-    if text != None:
-        if type(text) == type(""):
-            label.set_label(text)
+    if  value in props:
+        label.set_label(props[value])
     if width in props and height in props:
         label.set_size_request(props[width],props[height])
     if className in props:
@@ -119,6 +131,32 @@ def text(props,text):
     if id in props:
         label.set_name(props[id]) 
     return label
+
+def entry(props):
+    entry=Gtk.Entry()
+    if placeholder in props:
+        entry.set_placeholder_text(props[placeholder])
+    if xalign in props:
+        entry.set_xalign(props[xalign])
+    if yalign in props:
+        entry.set_yalign(props[yalign])
+    if opacity in props:
+        entry.set_opacity(props[opacity])
+    if visible in props:         
+        entry.set_visible(props[visible])
+    if  value in props:
+        entry.set_entry(props[value])
+    if width in props and height in props:
+        entry.set_size_request(props[width],props[height])
+    if className in props:
+        entry.get_style_context().add_class(props[className])
+    if id in props:
+        entry.set_name(props[id]) 
+    if onSubmit in props:
+        entry.connect("activate",props[onSubmit])
+    if onChange in props:
+        entry.connect("changed",props[onChange])
+    return entry
 
 def box(props,childs):
     
@@ -147,23 +185,18 @@ def box(props,childs):
         box.pack_start(child,exp,fi,pos)
     return box
 
-def getCss(css):
+def setCss(css):
     
     style_provider = Gtk.CssProvider()
     style_provider.load_from_data(css)
  
-    Gtk.StyleContext.add_provider_for_screen(
-    Gdk.Screen.get_default(),
-    style_provider,
-    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-)
+    Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(),style_provider,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-getCss(b""" 
+setCss(b""" 
     .btn{
         border-radius:10px;
         color:gray;
-        background:transparent;
-        margin:0px 2em ;
+        background:black;
         }
     .btn:hover{
             color:white;
@@ -181,16 +214,15 @@ getCss(b"""
     }
 """)
 
-win({className:"body",title:"app",transparent: "0,0,0,0", decorated:False ,position:"mouse"},
-        box({className:"container", spacing:10 , orientation:"vertical" },[   
-            button({ className:"btn", onClick:Gtk.main_quit , value:"exit" , width:80, height:80 }),
-            button({ className:"btn" , onClick:btn_on , value:"Press" , width:80 , height:80 }),
-            box({ expand: True },[
-                text({className:"label"},"hola a todos"),
-                button({ className:"btn" , value:"move", onClick:move}),
-            ])
 
-        ]))
+win({className:"body",title:"app",transparent:"0,0,0,0",decorated:0,position:"mouse"},
+    box({className:"container",spacing:10,orientation:"vertical"},[
+      entry({className:"entry",placeholder:"algo..",onSubmit:prueba}),
+        ])
+)
 
 
 Gtk.main()
+
+
+
